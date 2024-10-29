@@ -3,118 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSpeechAPIでキャラクターを操作</title>
+  <title>関西弁に変換して発声するWebアプリ</title>
   <style>
     body {
-      margin: 0;
-      position: relative;
-      overflow: hidden;
-      border: 2px solid black; /* 画面の境界線 */
-      width: 100vw;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
-    #character {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 50px;
-      height: 50px;
-      background-color: red;
-      border-radius: 50%;
-    }
-    #commandBox {
-      position: fixed;
-      top: 10px;
-      right: 10px;
+    #inputText, #kansaiText {
+      margin-top: 20px;
       padding: 10px;
-      border: 2px solid black;
+      border: 1px solid #333;
       border-radius: 5px;
-      background-color: white;
-      font-size: 18px;
+      width: 100%;
+      max-width: 600px;
     }
     #message {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      font-size: 20px;
+      margin-top: 20px;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <div id="character"></div>
-  <div id="commandBox">command: <span id="command"></span></div>
-  <div id="message">「みぎ」「ひだり」「うえ」「した」と話してキャラクターを動かしてください。</div>
+  <h1>関西弁に変換して発声するアプリ</h1>
+  <p>話しかけた言葉が表示され、関西弁に変換して発声します。</p>
+  
+  <div>
+    <strong>入力された文章:</strong>
+    <div id="inputText"></div>
+  </div>
+  <div>
+    <strong>関西弁に変換された文章:</strong>
+    <div id="kansaiText"></div>
+  </div>
+  
+  <button onclick="startRecognition()">音声認識開始</button>
+  <div id="message"></div>
   
   <script>
-    // キャラクターの初期位置と速度設定
-    const character = document.getElementById("character");
-    let positionX = window.innerWidth / 2;
-    let positionY = window.innerHeight / 2;
-    const speed = 5;
-    let direction = null;
-    let intervalId = null;
-
-    // 画面の範囲内にキャラクターを留める関数
-    function keepCharacterInBounds() {
-      if (positionX < 0) positionX = 0;
-      if (positionX > window.innerWidth - character.offsetWidth) positionX = window.innerWidth - character.offsetWidth;
-      if (positionY < 0) positionY = 0;
-      if (positionY > window.innerHeight - character.offsetHeight) positionY = window.innerHeight - character.offsetHeight;
-    }
-
-    // キャラクターを指定方向に動かす関数
-    function moveCharacter() {
-      switch (direction) {
-        case "みぎ":
-          positionX += speed;
-          break;
-        case "ひだり":
-          positionX -= speed;
-          break;
-        case "うえ":
-          positionY -= speed;
-          break;
-        case "した":
-          positionY += speed;
-          break;
-        default:
-          clearInterval(intervalId); // 無効な指示が入った場合に停止
-          intervalId = null;
-          return;
-      }
-      keepCharacterInBounds();
-      character.style.left = positionX + "px";
-      character.style.top = positionY + "px";
-    }
-
-    // 音声認識の設定
+    // Web Speech APIの設定
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "ja-JP";
     recognition.interimResults = false;
 
+    // 音声認識結果を取得し関西弁に変換
     recognition.onresult = (event) => {
-      const command = event.results[0][0].transcript.trim();
-      document.getElementById("command").innerText = command; // 右上に認識したコマンドを表示
-      document.getElementById("message").innerText = `認識されたコマンド: ${command}`;
+      const input = event.results[0][0].transcript.trim();
+      document.getElementById("inputText").innerText = input;
+      
+      // 関西弁に変換
+      const kansaiText = convertToKansai(input);
+      document.getElementById("kansaiText").innerText = kansaiText;
 
-      // 方向に応じて移動を開始または停止
-      if (["みぎ", "ひだり", "うえ", "した"].includes(command)) {
-        direction = command;
-        if (intervalId) clearInterval(intervalId);
-        intervalId = setInterval(moveCharacter, 100);
-      }
+      // 関西弁のテキストを発声
+      speakKansaiText(kansaiText);
     };
 
     recognition.onerror = (event) => {
       document.getElementById("message").innerText = "エラーが発生しました: " + event.error;
     };
 
-    recognition.onend = () => {
-      recognition.start(); // 認識が終わったら再スタートで継続的に待機
-    };
+    function startRecognition() {
+      recognition.start();
+      document.getElementById("message").innerText = "音声認識中...";
+    }
 
-    // 音声認識を開始
-    recognition.start();
+    // 関西弁に変換する簡単な関数
+    function convertToKansai(text) {
+      return text
+        .replace(/です/g, 'やで')
+        .replace(/ます/g, 'まっせ')
+        .replace(/ください/g, 'くれへん')
+        .replace(/します/g, 'しまっせ')
+        .replace(/あります/g, 'おまっせ')
+        .replace(/いい/g, 'ええ')
+        .replace(/だ/g, 'や')
+        .replace(/だよ/g, 'やで')
+        .replace(/だね/g, 'やな')
+        .replace(/本当/g, 'ホンマ')
+        .replace(/すごい/g, 'めっちゃ');
+    }
+
+    // 関西弁を発声する関数
+    function speakKansaiText(text) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      synth.speak(utterance);
+    }
   </script>
 </body>
 </html>

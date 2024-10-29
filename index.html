@@ -67,20 +67,45 @@
       document.getElementById("message").innerText = "音声認識中...";
     }
 
-    // 関西弁に変換する簡単な関数
+    // 関西弁に変換する関数
     function convertToKansai(text) {
       return text
-        .replace(/です/g, 'やで')
-        .replace(/ます/g, 'まっせ')
-        .replace(/ください/g, 'くれへん')
-        .replace(/します/g, 'しまっせ')
-        .replace(/あります/g, 'おまっせ')
-        .replace(/いい/g, 'ええ')
-        .replace(/だ/g, 'や')
+        .replace(/こんにちは/g, 'まいど')
+        .replace(/ありがとうございます/g, 'おおきに')
+        .replace(/ありがとう/g, 'おおきに')
+        .replace(/ごめんなさい/g, 'すんまへん')
+        .replace(/すみません/g, 'すんまへん')
+        .replace(/ですか/g, 'やろか')
         .replace(/だよ/g, 'やで')
         .replace(/だね/g, 'やな')
+        .replace(/だろう/g, 'やろ')
+        .replace(/ですね/g, 'やな')
+        .replace(/ですよ/g, 'やで')
+        .replace(/します/g, 'しまっせ')
+        .replace(/しています/g, 'してまんねん')
+        .replace(/している/g, 'しとる')
+        .replace(/していますか/g, 'してまっか')
+        .replace(/してください/g, 'してくれへん')
+        .replace(/です/g, 'やで')
+        .replace(/ます/g, 'まっせ')
+        .replace(/ました/g, 'まんねん')
+        .replace(/ください/g, 'くれへん')
+        .replace(/あります/g, 'おまっせ')
+        .replace(/ない/g, 'あらへん')
         .replace(/本当/g, 'ホンマ')
-        .replace(/すごい/g, 'めっちゃ');
+        .replace(/本当に/g, 'ホンマに')
+        .replace(/すごい/g, 'めっちゃ')
+        .replace(/いい/g, 'ええ')
+        .replace(/だ/g, 'や')
+        .replace(/でしょう/g, 'やろ')
+        .replace(/わかりました/g, 'わかったで')
+        .replace(/そうですね/g, 'せやな')
+        .replace(/そうです/g, 'せやで')
+        .replace(/そうですよ/g, 'せやで')
+        .replace(/分かりました/g, 'わかったわ')
+        .replace(/聞いて/g, '聞いといて')
+        .replace(/教えて/g, '教えといて')
+        .replace(/疲れた/g, 'しんどいわ');
     }
 
     // 関西弁を発声する関数

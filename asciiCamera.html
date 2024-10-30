@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムアスキーアートカメラ</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: monospace;
+            background-color: #000;
+            color: #00FF00;
+        }
+        #ascii-art {
+            white-space: pre;
+            font-size: 8px;
+            line-height: 6px;
+        }
+        video {
+            display: none;
+        }
+        button, select {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>リアルタイムアスキーアートカメラ</h1>
+    <video id="video" autoplay></video>
+    <pre id="ascii-art"></pre>
+    <button id="toggle-color">白黒に切り替え</button>
+    <button id="capture">切り取り</button>
+    <select id="resolution">
+        <option value="80x60">低解像度</option>
+        <option value="160x120">中解像度</option>
+        <option value="320x240">高解像度</option>
+    </select>
+
+    <script>
+        const video = document.getElementById("video");
+        const asciiArt = document.getElementById("ascii-art");
+        const toggleButton = document.getElementById("toggle-color");
+        const captureButton = document.getElementById("capture");
+        const resolutionSelect = document.getElementById("resolution");
+
+        const asciiChars = ["@", "#", "S", "%", "?", "*", "+", ";", ":", ",", "."];
+        let isColor = false;
+        let resolution = { width: 80, height: 60 };
+
+        // カメラ映像を取得
+        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+            video.srcObject = stream;
+            video.play();
+            video.addEventListener("play", processFrame);
+        });
+
+        // フレームをアスキーアートに変換
+        function processFrame() {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.width = resolution.width;
+            canvas.height = resolution.height;
+
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1); // 左右反転
+
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+            let ascii = "";
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const brightness = (r + g + b) / 3;
+                const charIndex = Math.floor((brightness / 255) * (asciiChars.length - 1));
+                
+                const asciiChar = asciiChars[charIndex];
+                if (isColor) {
+                    ascii += `<span style="color: rgb(${r}, ${g}, ${b})">${asciiChar}</span>`;
+                } else {
+                    ascii += asciiChar;
+                }
+
+                if ((i / 4 + 1) % canvas.width === 0) ascii += "\n";
+            }
+
+            asciiArt.innerHTML = ascii;
+            requestAnimationFrame(processFrame);
+        }
+
+        // 白黒とカラー切り替え
+        toggleButton.addEventListener("click", () => {
+            isColor = !isColor;
+            toggleButton.textContent = isColor ? "白黒に切り替え" : "カラーに切り替え";
+        });
+
+        // 解像度を選択
+        resolutionSelect.addEventListener("change", () => {
+            const [width, height] = resolutionSelect.value.split("x").map(Number);
+            resolution = { width, height };
+        });
+
+        // 切り取りボタン：アスキーアートをテキストファイルとして保存
+        captureButton.addEventListener("click", () => {
+            const asciiText = asciiArt.innerText;
+            const blob = new Blob([asciiText], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "ascii_art.txt";
+            link.click();
+        });
+    </script>
+</body>
+</html>
